@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .pipeline import already_processed, convert_pdf, ensure_base_dir
+from .pipeline import already_processed, convert_pdf, output_dir_for_pdf
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -15,12 +15,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_convert = sub.add_parser("convert", help="Convert one PDF")
     p_convert.add_argument("pdf", type=Path, help="Path to input PDF")
-    p_convert.add_argument("--data-dir", type=Path, default=Path("data"), help="Output base directory")
 
     p_batch = sub.add_parser("batch", help="Convert a folder of PDFs")
     p_batch.add_argument("folder", type=Path, help="Folder containing PDFs")
     p_batch.add_argument("--glob", default="*.pdf", help="Glob pattern (default: *.pdf)")
-    p_batch.add_argument("--data-dir", type=Path, default=Path("data"), help="Output base directory")
 
     return parser
 
@@ -31,14 +29,14 @@ def run(argv: list[str] | None = None) -> int:
 
     try:
         if args.command == "convert":
-            ensure_base_dir(args.data_dir)
-            result = convert_pdf(args.pdf, base_data_dir=args.data_dir, verbose=True)
+            result = convert_pdf(args.pdf, verbose=True)
             if result.doc_id:
                 print(f"doc_id={result.doc_id}")
+            if result.out_dir:
+                print(f"output_dir={result.out_dir}")
             return 0 if result.success else 1
 
         if args.command == "batch":
-            ensure_base_dir(args.data_dir)
             pdfs = sorted(args.folder.glob(args.glob))
             failures: list[tuple[Path, str | None]] = []
             converted = 0
@@ -47,12 +45,12 @@ def run(argv: list[str] | None = None) -> int:
             for pdf in pdfs:
                 if not pdf.is_file():
                     continue
-                if already_processed(args.data_dir, pdf):
+                if already_processed(pdf):
                     skipped += 1
-                    print(f"skip (already processed): {pdf}")
+                    print(f"skip (already processed): {output_dir_for_pdf(pdf)}")
                     continue
 
-                result = convert_pdf(pdf, base_data_dir=args.data_dir, verbose=True)
+                result = convert_pdf(pdf, verbose=True)
                 if result.success:
                     converted += 1
                     print(f"ok: {pdf} -> {result.doc_id}")

@@ -10,14 +10,20 @@ Given a PDF, `pdf2llm` writes:
 - `extracted_tables.json`: structured table arrays
 - `conversion_metadata.json`: status, timings, counts, errors, versions
 
-Outputs are stored in:
+Outputs are stored next to the input PDF in:
 
 ```text
-data/{doc_id}/
+/path/to/input/converted_<input_name>/
   original.pdf
   document_text.md
   extracted_tables.json
   conversion_metadata.json
+```
+
+Example for `paper.pdf`:
+
+```text
+/path/to/input/converted_paper/
 ```
 
 `doc_id` is deterministic from SHA256 bytes of the PDF:
@@ -81,10 +87,10 @@ pip install -e .
 python -m pdf2llm convert "C:\path\to\paper.pdf"
 ```
 
-7. Find outputs in:
+7. Find outputs next to your PDF:
 
 ```text
-C:\path\to\your\project\data\sha256_xxxxxxxxxxxxxxxx\
+C:\path\to\your\pdf\folder\converted_paper\
 ```
 
 ## Usage
@@ -111,7 +117,7 @@ python -m pdf2llm batch /path/to/folder --glob "*.pdf"
 Behavior:
 
 - processes matching PDFs
-- skips already processed docs by checking `data/{doc_id}`
+- skips already processed docs by checking `converted_<input_name>` folder
 - continues on errors and prints summary at the end
 
 ## Pipeline stages

@@ -18,7 +18,6 @@ from .storage import (
     atomic_write_text,
     compute_sha256,
     copy_original_pdf,
-    ensure_output_dir,
     make_doc_id,
 )
 from .tables import extract_tables
@@ -95,7 +94,7 @@ class StageProgress:
             self._state.close()
 
 
-def convert_pdf(pdf_path: Path, base_data_dir: Path = Path("data"), verbose: bool = True) -> ConversionResult:
+def convert_pdf(pdf_path: Path, output_dir: Path | None = None, verbose: bool = True) -> ConversionResult:
     source_file = pdf_path.name
     started_at = _now_iso()
 
@@ -128,7 +127,8 @@ def convert_pdf(pdf_path: Path, base_data_dir: Path = Path("data"), verbose: boo
         sha_start = time.perf_counter()
         sha256 = compute_sha256(pdf_path)
         doc_id = make_doc_id(sha256)
-        out_dir = ensure_output_dir(base_data_dir, doc_id)
+        out_dir = output_dir or output_dir_for_pdf(pdf_path)
+        out_dir.mkdir(parents=True, exist_ok=True)
         metadata["sha256"] = sha256
         metadata["doc_id"] = doc_id
         metadata["timings_sec"]["hash"] = round(time.perf_counter() - sha_start, 4)
@@ -185,7 +185,8 @@ def convert_pdf(pdf_path: Path, base_data_dir: Path = Path("data"), verbose: boo
         metadata["errors"].append(traceback.format_exc())
         if out_dir is None:
             fallback = f"failed_{int(time.time())}"
-            out_dir = ensure_output_dir(base_data_dir, fallback)
+            out_dir = pdf_path.parent / fallback
+            out_dir.mkdir(parents=True, exist_ok=True)
         _write_metadata(metadata, out_dir)
         return ConversionResult(success=False, doc_id=doc_id, out_dir=out_dir, metadata=metadata)
     finally:
@@ -258,18 +259,16 @@ def compute_doc_id_for_file(pdf_path: Path) -> str:
     return make_doc_id(compute_sha256(pdf_path))
 
 
-def already_processed(base_data_dir: Path, pdf_path: Path) -> bool:
-    doc_id = compute_doc_id_for_file(pdf_path)
-    return (base_data_dir / doc_id).exists()
+def output_dir_for_pdf(pdf_path: Path) -> Path:
+    return pdf_path.parent / f"converted_{pdf_path.stem}"
 
 
-def ensure_base_dir(base_data_dir: Path) -> None:
-    base_data_dir.mkdir(parents=True, exist_ok=True)
+def already_processed(pdf_path: Path) -> bool:
+    return output_dir_for_pdf(pdf_path).exists()
 
 
-def clear_doc_output(base_data_dir: Path, pdf_path: Path) -> None:
+def clear_doc_output(pdf_path: Path) -> None:
     """Helper for manual reruns/testing."""
-    doc_id = compute_doc_id_for_file(pdf_path)
-    target = base_data_dir / doc_id
+    target = output_dir_for_pdf(pdf_path)
     if target.exists():
         shutil.rmtree(target)
