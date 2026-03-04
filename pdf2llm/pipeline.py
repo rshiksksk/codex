@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.metadata
+import os
 import platform
 import shutil
 import time
@@ -147,9 +148,17 @@ def convert_pdf(pdf_path: Path, output_dir: Path | None = None, verbose: bool = 
 
         fallback_start = time.perf_counter()
         if not markdown_text:
-            markdown_text = _convert_with_markitdown(pdf_path)
+            try:
+                markdown_text = _convert_with_markitdown(pdf_path)
+            except Exception as exc:
+                metadata["errors"].append(f"MarkItDown fallback failed: {exc}")
         metadata["timings_sec"]["fallback_markitdown"] = round(time.perf_counter() - fallback_start, 4)
         _advance_stage(metadata, out_dir, progress, "fallback_markitdown")
+
+        if not markdown_text:
+            raise RuntimeError(
+                "Both converters failed. Ensure docling model download permissions are available and install MarkItDown PDF extras: pip install 'markitdown[pdf]'"
+            )
 
         norm_start = time.perf_counter()
         markdown_text = normalize_markdown(markdown_text)
@@ -187,6 +196,8 @@ def convert_pdf(pdf_path: Path, output_dir: Path | None = None, verbose: bool = 
             fallback = f"failed_{int(time.time())}"
             out_dir = pdf_path.parent / fallback
             out_dir.mkdir(parents=True, exist_ok=True)
+
+        _write_partial_outputs(pdf_path=pdf_path, out_dir=out_dir, markdown_text=markdown_text, tables=tables)
         _write_metadata(metadata, out_dir)
         return ConversionResult(success=False, doc_id=doc_id, out_dir=out_dir, metadata=metadata)
     finally:
@@ -195,6 +206,8 @@ def convert_pdf(pdf_path: Path, output_dir: Path | None = None, verbose: bool = 
 
 
 def _convert_with_docling(pdf_path: Path) -> tuple[str, Any | None]:
+    os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+
     from docling.document_converter import DocumentConverter
 
     converter = DocumentConverter()
@@ -244,6 +257,20 @@ def _advance_stage(metadata: dict[str, Any], out_dir: Path, progress: StageProgr
 
 def _write_metadata(metadata: dict[str, Any], out_dir: Path) -> None:
     atomic_write_json(out_dir / "conversion_metadata.json", metadata)
+
+
+def _write_partial_outputs(pdf_path: Path, out_dir: Path, markdown_text: str, tables: list[dict[str, Any]]) -> None:
+    try:
+        copy_original_pdf(pdf_path, out_dir)
+    except Exception:
+        pass
+
+    if markdown_text:
+        atomic_write_text(out_dir / "document_text.md", markdown_text)
+    else:
+        atomic_write_text(out_dir / "document_text.md", "")
+
+    atomic_write_json(out_dir / "extracted_tables.json", tables or [])
 
 
 def _now_iso() -> str:

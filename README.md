@@ -152,6 +152,25 @@ In fixed order:
 - Figure/image extraction is intentionally out of scope.
 - No chunking, embeddings, or external LLM calls.
 
+## Troubleshooting (Windows)
+
+If conversion fails with `WinError 1314` during Docling model download:
+
+- Enable **Developer Mode** in Windows, or run your terminal as Administrator once.
+- Then retry conversion.
+
+If fallback fails with a `markitdown` PDF dependency error:
+
+```bash
+pip install -U "markitdown[pdf]"
+```
+
+If you installed this package before this fix, reinstall dependencies:
+
+```bash
+pip install -U -e .
+```
+
 ## Optional tiny API
 
 If installed with `.[api]`, you can create a small wrapper service around the same pipeline.
