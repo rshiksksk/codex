@@ -23,11 +23,23 @@ data/{doc_id}/
 `doc_id` is deterministic from SHA256 bytes of the PDF:
 `sha256_<first16hex>`.
 
-## Install
+## Install (recommended: Miniforge/Conda, no venv in project)
+
+If you do **not** want a `.venv` folder inside the project, use Miniforge/Conda:
+
+1. Install **Miniforge**: https://github.com/conda-forge/miniforge
+2. Open terminal (or Miniforge Prompt)
+3. Create an environment (stored outside your project):
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+conda create -n pdf2llm python=3.11 -y
+conda activate pdf2llm
+```
+
+4. Go to your project folder and install:
+
+```bash
+cd /path/to/your/project
 pip install -e .
 ```
 
@@ -38,53 +50,41 @@ pip install -e .[rich]   # prettier progress bar
 pip install -e .[api]    # tiny FastAPI endpoints (not required)
 ```
 
-## Windows (easy step-by-step)
+## Windows (easy step-by-step with Miniforge)
 
-If you are on Windows and not very technical, follow this exact checklist:
+If you are on Windows and not very technical, follow this checklist:
 
-1. Install **Python 3.10+** from https://www.python.org/downloads/windows/
-   - During install, check **"Add Python to PATH"**.
-2. Open **PowerShell** (Start menu -> type `PowerShell`).
-3. Go to your project folder:
+1. Install **Miniforge for Windows** (link above).
+2. Open **Miniforge Prompt** (from Start menu).
+3. Create and activate env:
 
-```powershell
+```bash
+conda create -n pdf2llm python=3.11 -y
+conda activate pdf2llm
+```
+
+4. Move to your project folder:
+
+```bash
 cd C:\path\to\your\project
 ```
 
-4. Create a virtual environment:
+5. Install this tool:
 
-```powershell
-py -m venv .venv
-```
-
-5. Activate it:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-6. Install this tool:
-
-```powershell
+```bash
 pip install -e .
 ```
 
-7. Convert one PDF:
+6. Convert one PDF:
 
-```powershell
+```bash
 python -m pdf2llm convert "C:\path\to\paper.pdf"
 ```
 
-8. Find outputs in:
+7. Find outputs in:
 
 ```text
 C:\path\to\your\project\data\sha256_xxxxxxxxxxxxxxxx\
-```
-
-If PowerShell blocks activation, run this once in PowerShell and try step 5 again:
-
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
 ## Usage
