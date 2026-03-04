@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdf2llm"
+version = "0.1.0"
+description = "Minimal scientific PDF converter to markdown + tables"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "docling>=2.0.0",
+  "markitdown>=0.1.0",
+  "tqdm>=4.66.0",
+]
+
+[project.optional-dependencies]
+rich = ["rich>=13.7.0"]
+api = ["fastapi>=0.115.0", "uvicorn>=0.30.0", "python-multipart>=0.0.9"]
+
+[tool.setuptools]
+packages = ["pdf2llm"]
