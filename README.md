@@ -38,6 +38,55 @@ pip install -e .[rich]   # prettier progress bar
 pip install -e .[api]    # tiny FastAPI endpoints (not required)
 ```
 
+## Windows (easy step-by-step)
+
+If you are on Windows and not very technical, follow this exact checklist:
+
+1. Install **Python 3.10+** from https://www.python.org/downloads/windows/
+   - During install, check **"Add Python to PATH"**.
+2. Open **PowerShell** (Start menu -> type `PowerShell`).
+3. Go to your project folder:
+
+```powershell
+cd C:\path\to\your\project
+```
+
+4. Create a virtual environment:
+
+```powershell
+py -m venv .venv
+```
+
+5. Activate it:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+6. Install this tool:
+
+```powershell
+pip install -e .
+```
+
+7. Convert one PDF:
+
+```powershell
+python -m pdf2llm convert "C:\path\to\paper.pdf"
+```
+
+8. Find outputs in:
+
+```text
+C:\path\to\your\project\data\sha256_xxxxxxxxxxxxxxxx\
+```
+
+If PowerShell blocks activation, run this once in PowerShell and try step 5 again:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
 ## Usage
 
 ### Convert one PDF
